@@ -4,13 +4,16 @@ struct course {
 	char *name;
 	char *period;
 	char *instructor;
-	unsigned int start_time;
-	unsigned int end_time;
+	char *start_time;
+	char *end_time;
+	unsigned int start_time_seconds;
+	unsigned int end_time_seconds;
 };
 
 typedef struct schoolconfig schoolconfig;
 struct schoolconfig {
-	unsigned int start_time;
-	unsigned int end_time;
-	unsigned int end_time_academictime;
+	char *start_time;
+	char *end_time;
+	unsigned int start_time_seconds;
+	unsigned int end_time_seconds;
 };

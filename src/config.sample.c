@@ -1,24 +1,24 @@
 #include "config.h"
 
 schoolconfig school = {
-	.start_time = 28800,
-	.end_time = 54000
+	.start_time = "08:00",
+	.end_time = "15:00"
 };
 
 course courses[] = {
 	{
-		.name = "sample course 1",
-		.start_time = 28800,
-		.end_time = 31380
+		.name = "course 1",
+		.start_time = "08:00",
+		.end_time = "08:43"
 	},
 	{
-		.name = "sample course 2",
-		.start_time = 31620,
-		.end_time = 32820
+		.name = "course 2",
+		.start_time = "08:47",
+		.end_time = "09:07"
 	},
 	{
-		.name = "sample course 3",
-		.start_time = 33060,
-		.end_time = 35640
+		.name = "course 3",
+		.start_time = "09:11",
+		.end_time = "09:54"
 	}
 };

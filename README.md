@@ -9,9 +9,9 @@ next is a watchface for the [Pebble Smartwatch](https://getpebble.com) that, whe
 ### Configuration
 Copy src/config.sample.c to src/config.c.
 
-start\_time and end\_times are specified in seconds, starting from midnight local time. For example, if a class begins at 8:00, 28800 (8\*60\*60) would be its start\_time.
+start\_time and end\_times are specified in 24-hour time, with leading zeros (e.g. 08:00).
 
-Fill in your school's start and end time (allows next to determine period breaks) and copy the course blocks (beginning with a comma and ending with a } bracket) as many times as necessary, filling in their name, start\_time and end\_time.
+Fill in your school's start and end time and copy the course blocks (beginning with a comma and ending with a } bracket) as many times as necessary, filling in their name, start\_time, and end\_time.
 
 ### Installation
 Compile and install using the [Pebble SDK](https://developer.getpebble.com/2/getting-started/).

@@ -22,7 +22,7 @@ static int determine_daytime(struct tm *tick_time) {
 }
 
 static course detectcourse(unsigned int daytime) {
-	if (daytime < school.start_time || daytime > school.end_time) {
+	if (daytime < school.start_time_seconds || daytime > school.end_time_seconds) {
 		course classisover = {
 			.code = 1,
 			.name = "class is over"
@@ -33,21 +33,21 @@ static course detectcourse(unsigned int daytime) {
 	
 	unsigned int i = 0;
 	for (i=0;i<sizeof(courses)/sizeof(courses[0]);i++) {
-		if (daytime >= courses[i].start_time && daytime <= courses[i].end_time) {
+		if (daytime >= courses[i].start_time_seconds && daytime <= courses[i].end_time_seconds) {
 			return courses[i];
 		}
 	}
 	
 	i = 0;
 	for (i=0;i<sizeof(courses)/sizeof(courses[0]);i++) {
-		if (daytime >= courses[i].end_time && daytime <= courses[i+1].start_time) {
+		if (daytime >= courses[i].end_time_seconds && daytime <= courses[i+1].start_time_seconds) {
 			static char nextname[] = "next\nsillylongclassnamenothingshouldbethislong";
 			snprintf(nextname, sizeof(nextname), "next:\n%s", courses[i+1].name);
 			course transition = {
 				.code = 3,
 				.name = nextname,
-				.start_time = courses[i].end_time,
-				.end_time = courses[i+1].start_time
+				.start_time_seconds = courses[i].end_time_seconds,
+				.end_time_seconds = courses[i+1].start_time_seconds
 			};
 			
 			return transition;
@@ -77,9 +77,9 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 	text_layer_set_text(currentcourse, courseinprogress.name);
 	
 	if (courseinprogress.code == 0 || courseinprogress.code == 3) {
-		classpercent = ((determine_daytime(tick_time) - courseinprogress.start_time) * 100 / (courseinprogress.end_time - courseinprogress.start_time));
-		unsigned int timeremainingmin = ((courseinprogress.end_time - determine_daytime(tick_time))/60);
-		unsigned int timeremainingrem = ((courseinprogress.end_time - determine_daytime(tick_time)) % 60);
+		classpercent = ((determine_daytime(tick_time) - courseinprogress.start_time_seconds) * 100 / (courseinprogress.end_time_seconds - courseinprogress.start_time_seconds));
+		unsigned int timeremainingmin = ((courseinprogress.end_time_seconds - determine_daytime(tick_time))/60);
+		unsigned int timeremainingrem = ((courseinprogress.end_time_seconds - determine_daytime(tick_time)) % 60);
 		
 		if (timeremainingmin <= 4) {
 			static char timeremaining[] = "000 min 000 sec";
@@ -164,6 +164,35 @@ static void window_unload(Window *window) {
 }
 
 static void init(void) {
+	// Convert times from humantime to seconds
+	char school_start_hour[] = "99";
+	snprintf(school_start_hour, sizeof(school_start_hour), "%c%c", school.start_time[0], school.start_time[1]);
+	char school_start_minute[] = "99";
+	snprintf(school_start_minute, sizeof(school_start_hour), "%c%c", school.start_time[3], school.start_time[4]);
+	school.start_time_seconds = (atoi(school_start_hour)*60*60)+(atoi(school_start_minute)*60);
+	
+	char school_end_hour[] = "99";
+	snprintf(school_end_hour, sizeof(school_end_hour), "%c%c", school.end_time[0], school.end_time[1]);
+	char school_end_minute[] = "99";
+	snprintf(school_end_minute, sizeof(school_start_hour), "%c%c", school.end_time[3], school.end_time[4]);
+	school.end_time_seconds = (atoi(school_end_hour)*60*60)+(atoi(school_end_minute)*60);
+	
+	unsigned int i;
+	for (i=0;i<sizeof(courses)/sizeof(courses[0]);i++) {
+		char start_hour[] = "99";
+		snprintf(start_hour, sizeof(start_hour), "%c%c", courses[i].start_time[0], courses[i].start_time[1]);
+		char start_minute[] = "99";
+		snprintf(start_minute, sizeof(start_hour), "%c%c", courses[i].start_time[3], courses[i].start_time[4]);
+		courses[i].start_time_seconds = (atoi(start_hour)*60*60)+(atoi(start_minute)*60);
+		
+		char end_hour[] = "99";
+		snprintf(end_hour, sizeof(end_hour), "%c%c", courses[i].end_time[0], courses[i].end_time[1]);
+		char end_minute[] = "99";
+		snprintf(end_minute, sizeof(start_hour), "%c%c", courses[i].end_time[3], courses[i].end_time[4]);
+		courses[i].end_time_seconds = (atoi(end_hour)*60*60)+(atoi(end_minute)*60);
+	}
+	
+	// Initialise UI
 	window = window_create();
 	window_set_fullscreen(window, true);
 	window_set_window_handlers(window, (WindowHandlers) {
