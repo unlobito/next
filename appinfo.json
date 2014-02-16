@@ -1,0 +1,17 @@
+{
+	"uuid": "699f600f-97e6-4c64-8154-382c5e3a343e",
+	"shortName": "next",
+	"longName": "next",
+	"companyName": "Henri Watson",
+	"versionCode": 1,
+	"versionLabel": "0.0.1",
+	"watchapp": {
+		"watchface": true
+	},
+	"appKeys": {
+		"dummy": 0
+	},
+	"resources": {
+		"media": []
+	}
+}
