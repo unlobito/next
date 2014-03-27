@@ -17,7 +17,7 @@ course courseinprogress;
 
 static int determine_daytime(struct tm *tick_time) {
 	unsigned int daytime = (tick_time->tm_sec + (tick_time->tm_min*60) + (tick_time->tm_hour*60*60));
-	
+
 	return daytime;
 }
 
@@ -49,7 +49,7 @@ static course detectcourse(unsigned int daytime) {
 				.start_time_seconds = courses[i].end_time_seconds,
 				.end_time_seconds = courses[i+1].start_time_seconds
 			};
-			
+
 			return transition;
 		}
 	}
@@ -62,42 +62,62 @@ static course detectcourse(unsigned int daytime) {
 	return exception;
 }
 
-static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 	/* time + date formatting code lifted from pebble-sdk-examples/simplicity
-	   https://github.com/pebble/pebble-sdk-examples/blob/master/watchfaces/simplicity/src/simplicity.c */
+	https://github.com/pebble/pebble-sdk-examples/blob/master/watchfaces/simplicity/src/simplicity.c */
 	static char time_text[] = "00:00";
 	strftime(time_text, sizeof(time_text), "%R", tick_time);
 	text_layer_set_text(currenttime, time_text);
 	
 	static char date_text[] = "Xxxxxxxxx 00";
 	strftime(date_text, sizeof(date_text), "%B %e", tick_time);
-	text_layer_set_text(currentdate, date_text);
-	
+	if (date_text != text_layer_get_text(currentdate)) {
+		text_layer_set_text(currentdate, date_text);
+	}
+}
+
+static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
 	courseinprogress = detectcourse(determine_daytime(tick_time));
-	text_layer_set_text(currentcourse, courseinprogress.name);
+	
+	// make sure the course has changed before redrawing it
+	if (courseinprogress.name != text_layer_get_text(currentcourse)) {
+		text_layer_set_text(currentcourse, courseinprogress.name);
+	}
 	
 	if (courseinprogress.code == 0 || courseinprogress.code == 3) {
 		classpercent = ((determine_daytime(tick_time) - courseinprogress.start_time_seconds) * 100 / (courseinprogress.end_time_seconds - courseinprogress.start_time_seconds));
 		unsigned int timeremainingmin = ((courseinprogress.end_time_seconds - determine_daytime(tick_time))/60);
 		unsigned int timeremainingrem = ((courseinprogress.end_time_seconds - determine_daytime(tick_time)) % 60);
 		
+		static char timeremaining[] = "000 min 000 sec";
+		
 		if (timeremainingmin <= 4) {
-			static char timeremaining[] = "000 min 000 sec";
 			snprintf(timeremaining, sizeof(timeremaining), "%i min %i sec", timeremainingmin, timeremainingrem);
-			text_layer_set_text(remainingcourse, timeremaining);
 		} else {
-			static char timeremaining[] = "000 min";
 			snprintf(timeremaining, sizeof(timeremaining), "%i min", timeremainingmin);
+		}
+		
+		// make sure the time remaining has changed before redrawing it
+		if (timeremaining != text_layer_get_text(remainingcourse)) {
 			text_layer_set_text(remainingcourse, timeremaining);
 		}
 		
-		text_layer_set_text(remainingtext, "remaining");
+		// make sure remaining wasn't set before redrawing it
+		static char remainingtheword[] = "remaining";
+		if (remainingtheword != text_layer_get_text(remainingtext)) {
+			text_layer_set_text(remainingtext, "remaining");
+		}
 	} else {
-		text_layer_set_text(remainingcourse, "");
-		text_layer_set_text(remainingtext, "");
+		// make sure remaining was set before emptying it
+		char nowords[] = "";
+		if (nowords != text_layer_get_text(remainingcourse)) {
+			text_layer_set_text(remainingcourse, "");
+			text_layer_set_text(remainingtext, "");
+		}
 	}
-	
-	if (drawnclasspercent != classpercent) { // try and save battery life by reducing redraws
+
+	// make sure the class percent has changed before redrawing
+	if (drawnclasspercent != classpercent) {
 		Layer *window_layer = window_get_root_layer(window);
 		layer_mark_dirty(window_layer);
 		drawnclasspercent = classpercent;
@@ -111,7 +131,7 @@ void draw_layer(Layer *layer, GContext *gctxt) {
 	if (classpercent != 0) {
 		graphics_context_set_fill_color(gctxt, GColorBlack);
 		graphics_fill_rect(gctxt, GRect(0, 60, 144, 5), 0, GCornerNone);
-		
+
 		graphics_context_set_fill_color(gctxt, GColorWhite);
 		graphics_fill_rect(gctxt, GRect(0, 60, (classpercent*144/100), 5), 0, GCornerNone);
 	}
@@ -120,8 +140,8 @@ void draw_layer(Layer *layer, GContext *gctxt) {
 static void window_load(Window *window) {
 	Layer *window_layer = window_get_root_layer(window);
 	layer_set_update_proc(window_layer, draw_layer);
-	GRect bounds = layer_get_bounds(window_layer);
-
+	
+	// Draw text layers
 	currenttime = text_layer_create(GRect(0, 0, 144, 168-92));
 	text_layer_set_text_color(currenttime, GColorWhite);
 	text_layer_set_background_color(currenttime, GColorClear);
@@ -156,7 +176,12 @@ static void window_load(Window *window) {
 	text_layer_set_font(remainingtext, fonts_get_system_font(FONT_KEY_GOTHIC_18));
 	text_layer_set_text_alignment(remainingtext, GTextAlignmentCenter);
 	layer_add_child(window_layer, text_layer_get_layer(remainingtext));
-	text_layer_set_text(remainingtext, "remaining");
+	
+	// Fire text population immediately
+	time_t now = time(NULL);
+	struct tm * now_tm = localtime(&now);
+	handle_minute_tick(now_tm, MINUTE_UNIT);
+	handle_second_tick(now_tm, SECOND_UNIT);
 }
 
 static void window_unload(Window *window) {
@@ -199,7 +224,8 @@ static void init(void) {
 		.load = window_load,
 		.unload = window_unload,
 	});
-	tick_timer_service_subscribe(SECOND_UNIT, handle_tick);
+	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
+	tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
 	const bool animated = true;
 	window_stack_push(window, animated);
 }
@@ -210,7 +236,7 @@ static void deinit(void) {
 
 int main(void) {
 	init();
-
+	
 	app_event_loop();
 	deinit();
 }

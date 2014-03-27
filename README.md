@@ -3,8 +3,6 @@
 # next
 next is a watchface for the [Pebble Smartwatch](https://getpebble.com) that, when provided with your class schedule, shows your current class, the amount of time until the next period, and what class is next.
 
-**Warning**: next is in an alpha stage, at best. It is probably battery inefficient and should not be run outside of school hours for long periods of time. 
-
 ## Setup
 ### Configuration
 Copy src/config.sample.c to src/config.c.
