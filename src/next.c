@@ -62,21 +62,21 @@ static course detectcourse(unsigned int daytime) {
 	return exception;
 }
 
-static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 	/* time + date formatting code lifted from pebble-sdk-examples/simplicity
 	https://github.com/pebble/pebble-sdk-examples/blob/master/watchfaces/simplicity/src/simplicity.c */
 	static char time_text[] = "00:00";
 	strftime(time_text, sizeof(time_text), "%R", tick_time);
-	text_layer_set_text(currenttime, time_text);
+	if (time_text != text_layer_get_text(currenttime)) {
+		text_layer_set_text(currenttime, time_text);
+	}
 	
 	static char date_text[] = "Xxxxxxxxx 00";
 	strftime(date_text, sizeof(date_text), "%B %e", tick_time);
 	if (date_text != text_layer_get_text(currentdate)) {
 		text_layer_set_text(currentdate, date_text);
 	}
-}
-
-static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+	
 	courseinprogress = detectcourse(determine_daytime(tick_time));
 	
 	// make sure the course has changed before redrawing it
@@ -180,8 +180,7 @@ static void window_load(Window *window) {
 	// Fire text population immediately
 	time_t now = time(NULL);
 	struct tm * now_tm = localtime(&now);
-	handle_minute_tick(now_tm, MINUTE_UNIT);
-	handle_second_tick(now_tm, SECOND_UNIT);
+	handle_tick(now_tm, SECOND_UNIT);
 }
 
 static void window_unload(Window *window) {
@@ -224,8 +223,7 @@ static void init(void) {
 		.load = window_load,
 		.unload = window_unload,
 	});
-	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
-	tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
+	tick_timer_service_subscribe(SECOND_UNIT, handle_tick);
 	const bool animated = true;
 	window_stack_push(window, animated);
 }
