@@ -86,13 +86,13 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 	
 	if (courseinprogress.code == 0 || courseinprogress.code == 3) {
 		classpercent = ((determine_daytime(tick_time) - courseinprogress.start_time_seconds) * 100 / (courseinprogress.end_time_seconds - courseinprogress.start_time_seconds));
-		unsigned int timeremainingmin = ((courseinprogress.end_time_seconds - determine_daytime(tick_time))/60);
+		unsigned int timeremainingmin = ((courseinprogress.end_time_seconds/60) - (determine_daytime(tick_time)/60));
 		unsigned int timeremainingrem = ((courseinprogress.end_time_seconds - determine_daytime(tick_time)) % 60);
 		
 		static char timeremaining[] = "000 min 000 sec";
 		
-		if (timeremainingmin <= 4) {
-			snprintf(timeremaining, sizeof(timeremaining), "%i min %i sec", timeremainingmin, timeremainingrem);
+		if (timeremainingmin == 1) {
+			snprintf(timeremaining, sizeof(timeremaining), "%i sec", timeremainingrem);
 		} else {
 			snprintf(timeremaining, sizeof(timeremaining), "%i min", timeremainingmin);
 		}
