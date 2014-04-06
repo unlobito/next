@@ -2,7 +2,8 @@
 
 appconfig config = {
 	.start_time = "08:00",
-	.end_time = "15:00"
+	.end_time = "15:00",
+	.hr24_time = 1
 };
 
 course courses[] = {

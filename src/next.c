@@ -66,7 +66,11 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 	/* time + date formatting code lifted from pebble-sdk-examples/simplicity
 	https://github.com/pebble/pebble-sdk-examples/blob/master/watchfaces/simplicity/src/simplicity.c */
 	static char time_text[] = "00:00";
-	strftime(time_text, sizeof(time_text), "%R", tick_time);
+	if (config.hr24_time == 1) {
+		strftime(time_text, sizeof(time_text), "%R", tick_time);
+	} else {
+		strftime(time_text, sizeof(time_text), "%I:%M", tick_time);
+	}
 	if (time_text != text_layer_get_text(currenttime)) {
 		text_layer_set_text(currenttime, time_text);
 	}
