@@ -1,6 +1,6 @@
 #include "config.h"
 
-schoolconfig school = {
+appconfig config = {
 	.start_time = "08:00",
 	.end_time = "15:00"
 };

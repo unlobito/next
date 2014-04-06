@@ -22,7 +22,7 @@ static int determine_daytime(struct tm *tick_time) {
 }
 
 static course detectcourse(unsigned int daytime) {
-	if (daytime < school.start_time_seconds || daytime > school.end_time_seconds) {
+	if (daytime < config.start_time_seconds || daytime > config.end_time_seconds) {
 		course classisover = {
 			.code = 1,
 			.name = "class is over"
@@ -190,16 +190,16 @@ static void window_unload(Window *window) {
 static void init(void) {
 	// Convert times from humantime to seconds
 	char school_start_hour[] = "99";
-	snprintf(school_start_hour, sizeof(school_start_hour), "%c%c", school.start_time[0], school.start_time[1]);
+	snprintf(school_start_hour, sizeof(school_start_hour), "%c%c", config.start_time[0], config.start_time[1]);
 	char school_start_minute[] = "99";
-	snprintf(school_start_minute, sizeof(school_start_hour), "%c%c", school.start_time[3], school.start_time[4]);
-	school.start_time_seconds = (atoi(school_start_hour)*60*60)+(atoi(school_start_minute)*60);
+	snprintf(school_start_minute, sizeof(school_start_hour), "%c%c", config.start_time[3], config.start_time[4]);
+	config.start_time_seconds = (atoi(school_start_hour)*60*60)+(atoi(school_start_minute)*60);
 	
 	char school_end_hour[] = "99";
-	snprintf(school_end_hour, sizeof(school_end_hour), "%c%c", school.end_time[0], school.end_time[1]);
+	snprintf(school_end_hour, sizeof(school_end_hour), "%c%c", config.end_time[0], config.end_time[1]);
 	char school_end_minute[] = "99";
-	snprintf(school_end_minute, sizeof(school_start_hour), "%c%c", school.end_time[3], school.end_time[4]);
-	school.end_time_seconds = (atoi(school_end_hour)*60*60)+(atoi(school_end_minute)*60);
+	snprintf(school_end_minute, sizeof(school_start_hour), "%c%c", config.end_time[3], config.end_time[4]);
+	config.end_time_seconds = (atoi(school_end_hour)*60*60)+(atoi(school_end_minute)*60);
 	
 	unsigned int i;
 	for (i=0;i<sizeof(courses)/sizeof(courses[0]);i++) {

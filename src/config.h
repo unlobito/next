@@ -10,8 +10,8 @@ struct course {
 	unsigned int end_time_seconds;
 };
 
-typedef struct schoolconfig schoolconfig;
-struct schoolconfig {
+typedef struct appconfig appconfig;
+struct appconfig {
 	char *start_time;
 	char *end_time;
 	unsigned int start_time_seconds;
