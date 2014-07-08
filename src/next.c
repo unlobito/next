@@ -15,6 +15,9 @@ unsigned int classpercent;
 unsigned int drawnclasspercent;
 course courseinprogress;
 
+unsigned int start_time_seconds;
+unsigned int end_time_seconds;
+
 static int determine_daytime(struct tm *tick_time) {
 	unsigned int daytime = (tick_time->tm_sec + (tick_time->tm_min*60) + (tick_time->tm_hour*60*60));
 
@@ -22,7 +25,7 @@ static int determine_daytime(struct tm *tick_time) {
 }
 
 static course detectcourse(unsigned int daytime) {
-	if (daytime < config.start_time_seconds || daytime > config.end_time_seconds) {
+	if (daytime < start_time_seconds || daytime > end_time_seconds) {
 		course classisover = {
 			.code = 1,
 			.name = "class is over"
@@ -193,18 +196,6 @@ static void window_unload(Window *window) {
 
 static void init(void) {
 	// Convert times from humantime to seconds
-	char school_start_hour[] = "99";
-	snprintf(school_start_hour, sizeof(school_start_hour), "%c%c", config.start_time[0], config.start_time[1]);
-	char school_start_minute[] = "99";
-	snprintf(school_start_minute, sizeof(school_start_hour), "%c%c", config.start_time[3], config.start_time[4]);
-	config.start_time_seconds = (atoi(school_start_hour)*60*60)+(atoi(school_start_minute)*60);
-
-	char school_end_hour[] = "99";
-	snprintf(school_end_hour, sizeof(school_end_hour), "%c%c", config.end_time[0], config.end_time[1]);
-	char school_end_minute[] = "99";
-	snprintf(school_end_minute, sizeof(school_start_hour), "%c%c", config.end_time[3], config.end_time[4]);
-	config.end_time_seconds = (atoi(school_end_hour)*60*60)+(atoi(school_end_minute)*60);
-
 	unsigned int i;
 	for (i=0;i<sizeof(courses)/sizeof(courses[0]);i++) {
 		char start_hour[] = "99";
@@ -219,6 +210,9 @@ static void init(void) {
 		snprintf(end_minute, sizeof(start_hour), "%c%c", courses[i].end_time[3], courses[i].end_time[4]);
 		courses[i].end_time_seconds = (atoi(end_hour)*60*60)+(atoi(end_minute)*60);
 	}
+
+	start_time_seconds = courses[0].start_time_seconds;
+	end_time_seconds = courses[i-1].end_time_seconds;
 
 	// Initialise UI
 	window = window_create();
