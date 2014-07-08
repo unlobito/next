@@ -27,17 +27,17 @@ static course detectcourse(unsigned int daytime) {
 			.code = 1,
 			.name = "class is over"
 		};
-		
+
 		return classisover;
 	}
-	
+
 	unsigned int i = 0;
 	for (i=0;i<sizeof(courses)/sizeof(courses[0]);i++) {
 		if (daytime >= courses[i].start_time_seconds && daytime <= courses[i].end_time_seconds) {
 			return courses[i];
 		}
 	}
-	
+
 	i = 0;
 	for (i=0;i<sizeof(courses)/sizeof(courses[0]);i++) {
 		if (daytime >= courses[i].end_time_seconds && daytime <= courses[i+1].start_time_seconds) {
@@ -53,12 +53,12 @@ static course detectcourse(unsigned int daytime) {
 			return transition;
 		}
 	}
-	
+
 	course exception = {
 		.code = 2,
 		.name = "exception\noccurred"
 	};
-	
+
 	return exception;
 }
 
@@ -74,38 +74,38 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 	if (time_text != text_layer_get_text(currenttime)) {
 		text_layer_set_text(currenttime, time_text);
 	}
-	
+
 	static char date_text[] = "Xxxxxxxxx 00";
 	strftime(date_text, sizeof(date_text), "%B %e", tick_time);
 	if (date_text != text_layer_get_text(currentdate)) {
 		text_layer_set_text(currentdate, date_text);
 	}
-	
+
 	courseinprogress = detectcourse(determine_daytime(tick_time));
-	
+
 	// make sure the course has changed before redrawing it
 	if (courseinprogress.name != text_layer_get_text(currentcourse)) {
 		text_layer_set_text(currentcourse, courseinprogress.name);
 	}
-	
+
 	if (courseinprogress.code == 0 || courseinprogress.code == 3) {
 		classpercent = ((determine_daytime(tick_time) - courseinprogress.start_time_seconds) * 100 / (courseinprogress.end_time_seconds - courseinprogress.start_time_seconds));
 		unsigned int timeremainingmin = ((courseinprogress.end_time_seconds/60) - (determine_daytime(tick_time)/60));
 		unsigned int timeremainingrem = ((courseinprogress.end_time_seconds - determine_daytime(tick_time)) % 60);
-		
+
 		static char timeremaining[] = "000 min 000 sec";
-		
+
 		if (timeremainingmin == 1) {
 			snprintf(timeremaining, sizeof(timeremaining), "%i sec", timeremainingrem);
 		} else {
 			snprintf(timeremaining, sizeof(timeremaining), "%i min", timeremainingmin);
 		}
-		
+
 		// make sure the time remaining has changed before redrawing it
 		if (timeremaining != text_layer_get_text(remainingcourse)) {
 			text_layer_set_text(remainingcourse, timeremaining);
 		}
-		
+
 		// make sure remaining wasn't set before redrawing it
 		static char remainingtheword[] = "remaining";
 		if (remainingtheword != text_layer_get_text(remainingtext)) {
@@ -131,7 +131,7 @@ static void handle_tick(struct tm *tick_time, TimeUnits units_changed) {
 void draw_layer(Layer *layer, GContext *gctxt) {
 	graphics_context_set_fill_color(gctxt, GColorBlack);
 	graphics_fill_rect(gctxt, GRect(0, 0, 144, 168), 0, GCornerNone);
-	
+
 	if (classpercent != 0) {
 		graphics_context_set_fill_color(gctxt, GColorBlack);
 		graphics_fill_rect(gctxt, GRect(0, 60, 144, 5), 0, GCornerNone);
@@ -144,7 +144,7 @@ void draw_layer(Layer *layer, GContext *gctxt) {
 static void window_load(Window *window) {
 	Layer *window_layer = window_get_root_layer(window);
 	layer_set_update_proc(window_layer, draw_layer);
-	
+
 	// Draw text layers
 	currenttime = text_layer_create(GRect(0, 0, 144, 168-92));
 	text_layer_set_text_color(currenttime, GColorWhite);
@@ -152,35 +152,35 @@ static void window_load(Window *window) {
 	text_layer_set_font(currenttime, fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS));
 	text_layer_set_text_alignment(currenttime, GTextAlignmentCenter);
 	layer_add_child(window_layer, text_layer_get_layer(currenttime));
-	
+
 	currentdate = text_layer_create(GRect(0, 35, 144, 168-92));
 	text_layer_set_text_color(currentdate, GColorWhite);
 	text_layer_set_background_color(currentdate, GColorClear);
 	text_layer_set_font(currentdate, fonts_get_system_font(FONT_KEY_GOTHIC_18));
 	text_layer_set_text_alignment(currentdate, GTextAlignmentCenter);
 	layer_add_child(window_layer, text_layer_get_layer(currentdate));
-	
+
 	currentcourse = text_layer_create(GRect(7, 60, 144-7, 60));
 	text_layer_set_text_color(currentcourse, GColorWhite);
 	text_layer_set_background_color(currentcourse, GColorClear);
 	text_layer_set_font(currentcourse, fonts_get_system_font(FONT_KEY_GOTHIC_28));
 	text_layer_set_text_alignment(currentcourse, GTextAlignmentLeft);
 	layer_add_child(window_layer, text_layer_get_layer(currentcourse));
-	
+
 	remainingcourse = text_layer_create(GRect(0, 130, 144, 60));
 	text_layer_set_text_color(remainingcourse, GColorWhite);
 	text_layer_set_background_color(remainingcourse, GColorClear);
 	text_layer_set_font(remainingcourse, fonts_get_system_font(FONT_KEY_GOTHIC_18));
 	text_layer_set_text_alignment(remainingcourse, GTextAlignmentCenter);
 	layer_add_child(window_layer, text_layer_get_layer(remainingcourse));
-	
+
 	remainingtext = text_layer_create(GRect(0, 145, 144, 60));
 	text_layer_set_text_color(remainingtext, GColorWhite);
 	text_layer_set_background_color(remainingtext, GColorClear);
 	text_layer_set_font(remainingtext, fonts_get_system_font(FONT_KEY_GOTHIC_18));
 	text_layer_set_text_alignment(remainingtext, GTextAlignmentCenter);
 	layer_add_child(window_layer, text_layer_get_layer(remainingtext));
-	
+
 	// Fire text population immediately
 	time_t now = time(NULL);
 	struct tm * now_tm = localtime(&now);
@@ -198,13 +198,13 @@ static void init(void) {
 	char school_start_minute[] = "99";
 	snprintf(school_start_minute, sizeof(school_start_hour), "%c%c", config.start_time[3], config.start_time[4]);
 	config.start_time_seconds = (atoi(school_start_hour)*60*60)+(atoi(school_start_minute)*60);
-	
+
 	char school_end_hour[] = "99";
 	snprintf(school_end_hour, sizeof(school_end_hour), "%c%c", config.end_time[0], config.end_time[1]);
 	char school_end_minute[] = "99";
 	snprintf(school_end_minute, sizeof(school_start_hour), "%c%c", config.end_time[3], config.end_time[4]);
 	config.end_time_seconds = (atoi(school_end_hour)*60*60)+(atoi(school_end_minute)*60);
-	
+
 	unsigned int i;
 	for (i=0;i<sizeof(courses)/sizeof(courses[0]);i++) {
 		char start_hour[] = "99";
@@ -212,14 +212,14 @@ static void init(void) {
 		char start_minute[] = "99";
 		snprintf(start_minute, sizeof(start_hour), "%c%c", courses[i].start_time[3], courses[i].start_time[4]);
 		courses[i].start_time_seconds = (atoi(start_hour)*60*60)+(atoi(start_minute)*60);
-		
+
 		char end_hour[] = "99";
 		snprintf(end_hour, sizeof(end_hour), "%c%c", courses[i].end_time[0], courses[i].end_time[1]);
 		char end_minute[] = "99";
 		snprintf(end_minute, sizeof(start_hour), "%c%c", courses[i].end_time[3], courses[i].end_time[4]);
 		courses[i].end_time_seconds = (atoi(end_hour)*60*60)+(atoi(end_minute)*60);
 	}
-	
+
 	// Initialise UI
 	window = window_create();
 	window_set_fullscreen(window, true);
@@ -238,7 +238,7 @@ static void deinit(void) {
 
 int main(void) {
 	init();
-	
+
 	app_event_loop();
 	deinit();
 }
