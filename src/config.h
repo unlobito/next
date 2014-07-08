@@ -16,5 +16,4 @@ struct appconfig {
 	char *end_time;
 	unsigned int start_time_seconds;
 	unsigned int end_time_seconds;
-	unsigned int hr24_time;
 };
